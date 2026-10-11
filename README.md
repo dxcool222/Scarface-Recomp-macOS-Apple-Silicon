@@ -7,11 +7,9 @@
 **Scarface: The World Is Yours (2006)**  
 *Static recompilation of the original Windows PC version for macOS ARM64*
 
-![ARM64](https://img.shields.io/badge/ARCH-ARM64-8A2BE2?style=for-the-badge)
-![macOS](https://img.shields.io/badge/PLATFORM-macOS-111111?style=for-the-badge&logo=apple&logoColor=white)
-![Experimental](https://img.shields.io/badge/STATUS-EXPERIMENTAL-C46A00?style=for-the-badge)
-![Target](https://img.shields.io/badge/TARGET-Scarface%20v1.00.2-2455A4?style=for-the-badge)
-![Language](https://img.shields.io/badge/LANGUAGE-C%20%7C%20C%2B%2B-00599C?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-Apple%20Silicon%20%28M--series%29-8A2BE2)
+![Status](https://img.shields.io/badge/status-Experimental%20WIP-orange)
+![Game Version](https://img.shields.io/badge/game%20target-Scarface%20v1.00.2-blue)
 
 <br>
 
