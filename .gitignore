@@ -1,0 +1,36 @@
+# Build outputs. The shipped translation in gen/ is source and stays.
+/build/
+/kit/build/
+
+# A local copy of the retail game. Never commit it.
+/original/
+
+# Python, caches, and editor files
+/.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.DS_Store
+
+# Logs, traces, and app bundles
+*.log
+*.trace
+*.app/
+*.dSYM/
+
+# Retail game files and captured media
+*.exe
+*.dll
+*.rcf
+*.bik
+*.smk
+*.wav
+*.mp3
+*.mp4
+*.pcm
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key

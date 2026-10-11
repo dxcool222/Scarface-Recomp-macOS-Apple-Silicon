@@ -1,0 +1,72 @@
+recomp-kit is a static recompilation kit. Every game it builds is represented
+by its own repository, which carries that game's notices. Original game names,
+executable code, artwork, audio, levels and other data retain their original
+ownership and notices; this project is not affiliated with or endorsed by any
+game's publisher.
+
+The handwritten native host, compatibility runtime, translator, build/test
+tools and project documentation are covered by LICENSE. Generated translations
+of a game's executable are local build products and are never tracked here.
+A game's executable, data, artwork, audio and levels are always required from
+the player's own copy and are never included.
+
+Lua 5.4.6 is included unmodified under its upstream MIT license; see
+third_party/lua/LICENSE and the notices in its source files.
+
+Ghidra, Capstone, pefile, Unicorn, NumPy and Pillow are external development
+tools with their own licenses, not game dependencies at runtime.
+
+TinySoundFont (third_party/tsf/tsf.h) is Copyright (C) 2017-2023 Bernhard Schelling,
+licensed under the MIT License; see third_party/tsf/LICENSE. It renders a game's
+own SoundFont, which is not included.
+
+minimp3 (third_party/minimp3/minimp3.h) by Lion (lieff) is dedicated to the
+public domain under CC0 1.0; see third_party/minimp3/LICENSE. It decodes a
+game's own MP3 music, which is not included.
+
+stb_truetype (third_party/stb/stb_truetype.h, v1.26, upstream commit
+6e9f34d5429cf16790ec43c9bac3f1ee4ad1f760) by Sean Barrett is available under
+the MIT License or as public domain; see third_party/stb/LICENSE. It rasterizes
+fonts a game registers from its own resources, and the Open Sans faces below.
+
+Open Sans 1.101 (third_party/fonts/opensans/OpenSans-Regular.ttf and
+OpenSans-Semibold.ttf), Digitized data copyright 2010-2011 Google Corporation,
+is included unmodified under the Apache License, Version 2.0; see
+third_party/fonts/opensans/LICENSE and README.md for its source. Open Sans is a
+trademark of Google and may be registered in certain jurisdictions. The runtime
+embeds it to draw the interface faces Windows provides and the kit does not.
+
+GeneralUser GS 2.0.3 (third_party/soundfonts/generaluser-gs/GeneralUser-GS.sf2)
+by S. Christian Collins is included unmodified under its own licence, which
+permits its use in software projects; see third_party/soundfonts/generaluser-gs/
+LICENSE and README.md for its source. Apps carry it as general-midi.sf2 to play
+MIDI for a game that ships no instrument bank of its own.
+miniz 3.0.2 (third_party/miniz) is Copyright 2013-2014 RAD Game Tools and
+Valve Software and Copyright 2010-2014 Rich Geldreich and Tenacious Software
+LLC, licensed under the MIT License; see third_party/miniz/LICENSE. The
+launcher reads the player's ZIP of their own game and writes save exports
+with it.
+
+SDL3 is fetched at build time from https://github.com/libsdl-org/SDL at a pinned
+release tag and linked statically; it is licensed under the zlib License.
+
+FFmpeg 7.1.1 is Copyright (c) 2000-2025 the FFmpeg developers, licensed under
+the GNU Lesser General Public License version 2.1 or later. With RECOMP_VIDEO
+enabled, its unmodified source is fetched and built with only Bink/Smacker
+decoders and demuxers and the file protocol. libavformat, libavcodec and
+libavutil are linked dynamically and bundled as replaceable macOS dylibs.
+See third_party/ffmpeg/NOTICE.md for the full LGPL 2.1 text, exact source URL,
+SHA-256 and configure command. FFmpeg is not covered by the kit's MIT license.
+
+volk (third_party/volk) is Copyright (c) 2018-2024 Arseny Kapoulkine, MIT License;
+see third_party/volk/LICENSE.md. The Vulkan headers (third_party/vulkan-headers)
+are Copyright 2015-2025 The Khronos Group Inc., Apache License 2.0 or MIT; see
+third_party/vulkan-headers/LICENSE.md. Both are included unmodified. The Vulkan
+loader, MoltenVK and Mesa's lavapipe are runtime components on the player's or
+developer's machine and are not distributed here.
+
+dx/d3d11.cpp describes, without quoting, the shader contract of
+SNEG-DEV/siege-of-avalon's src/win32/graphics/D3DRenderer.pas (LGPL-2.1), and
+dx/d3dcompiler.cpp recognises those programs by digests of their source. No
+part of that source is included; the software adapter implements the
+described arithmetic independently.

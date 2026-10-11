@@ -1,0 +1,20 @@
+Scarface: The World Is Yours is the original game represented by this project.
+Original game names, executable code, artwork, audio, and other data retain
+their original ownership. This project is not affiliated with or endorsed by
+the original game's publishers.
+
+The configuration and tools in this repository are covered by LICENSE. The
+native host, compatibility runtime, and translator are in kit/, under that
+directory's own LICENSE and NOTICE.
+
+Original game files are not distributed in this repository and are not
+relicensed by its MIT license. The supported executable is scarface.exe,
+PC v1.00.2, SHA-256
+aee792ee4552e28c533abab7992dd5ad542e8ff12806cbcedab300842d86f6f5.
+The translated guest code in gen/ is included so this Mac app can be compiled
+without the retail executable. It is a translation of that executable, not a
+copy of the game, and it does not relicense the game. To play, point the app
+at your own PC installation with --exe.
+
+Ghidra, Capstone, pefile, Unicorn, NumPy and Pillow are external development
+tools with their own licenses. The kit's NOTICE lists the components it links.

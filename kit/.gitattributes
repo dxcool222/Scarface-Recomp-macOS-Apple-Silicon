@@ -1,0 +1,3 @@
+translation/*.c linguist-generated=true
+translation/*.h linguist-generated=true
+translation/symbols.json linguist-generated=true

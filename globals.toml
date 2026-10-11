@@ -1,0 +1,4 @@
+# No Scarface global has been identified for the kit's host macros.
+# simulation_turn, command_frame and entity_base are only read by the smoke
+# and host-test targets, which this app build does not compile. Their
+# reserved padding slots are 0x009d4be0, 0x009d4be4 and 0x009d4bf0.

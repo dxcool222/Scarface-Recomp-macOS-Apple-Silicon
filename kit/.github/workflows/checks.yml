@@ -1,0 +1,179 @@
+name: Checks
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tooling:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install pinned contributor tools
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+      - name: Test source tooling without game files
+        run: .venv/bin/python tools/test.py
+      - name: Check native code formatting
+        run: .venv/bin/python tools/format.py
+      - name: Check repository boundaries and documentation links
+        run: .venv/bin/python tools/check_repo.py
+
+  android-stub:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install CMake and Ninja
+        run: |
+          python3 -m venv .ci
+          .ci/bin/python -m pip install cmake==4.1.2 ninja==1.13.0
+          echo "$PWD/.ci/bin" >> "$GITHUB_PATH"
+      - name: Install the pinned Android NDK
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;27.2.12479018"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+      - name: Configure the arm64 Android stub (API 29)
+        run: cmake --preset android-stub
+      - name: Link the shared SDL app against the stub translation
+        run: cmake --build --preset android-stub --target recomp_app
+      - name: Check the SDLActivity library name
+        run: test -s build/cmake/android-stub/host/libmain.so
+
+  windows-cross:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install cross-build and media test tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential glslc ffmpeg wine64 wine xvfb
+          python3 -m venv .ci
+          .ci/bin/python -m pip install cmake==4.1.2 ninja==1.13.0
+          echo "$PWD/.ci/bin" >> "$GITHUB_PATH"
+      - name: Install the pinned llvm-mingw UCRT toolchain
+        run: |
+          curl -fL --retry 3 -o "$RUNNER_TEMP/llvm-mingw.tar.xz" \
+            https://github.com/mstorsjo/llvm-mingw/releases/download/20260908/llvm-mingw-20260908-ucrt-ubuntu-22.04-x86_64.tar.xz
+          echo "2258c745e3155870c80793f3e8c80b28fbde11b9ff73c4c78783635b3440b092  $RUNNER_TEMP/llvm-mingw.tar.xz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/llvm-mingw"
+          tar -xf "$RUNNER_TEMP/llvm-mingw.tar.xz" -C "$RUNNER_TEMP/llvm-mingw" --strip-components=1
+          echo "LLVM_MINGW_ROOT=$RUNNER_TEMP/llvm-mingw" >> "$GITHUB_ENV"
+      - name: Cross-build the app and test binaries with media enabled
+        run: |
+          .ci/bin/python tools/build.py --preset windows-cross --stub --target app --jobs 4
+          .ci/bin/python tools/test.py --preset windows-cross-stub --compile-only --jobs 4
+      - name: Check bundled codecs and decode Ogg with the Windows DLLs
+        env:
+          WINEDEBUG: -all
+          WINEARCH: win64
+        run: |
+          grep -q '^RECOMP_VIDEO:BOOL=ON$' build/cmake/windows-cross-stub/CMakeCache.txt
+          for component in INDEO5_DECODER VORBIS_DECODER AVI_DEMUXER OGG_DEMUXER; do
+            grep -q "^#define CONFIG_${component} 1$" build/cmake/windows-cross-stub/ffmpeg-prefix/src/ffmpeg-build/config_components.h
+          done
+          mkdir -p "$RUNNER_TEMP/media-check"
+          media_bin=build/windows-stub/recomp
+          cp "$media_bin/dx_tests.exe" "$RUNNER_TEMP/media-check/"
+          for dll in avformat-61.dll avcodec-61.dll avutil-59.dll; do
+            test -s "$media_bin/$dll"
+            cp "$media_bin/$dll" "$RUNNER_TEMP/media-check/"
+          done
+          ffmpeg -v error -f lavfi -i sine=frequency=440:duration=1 -ar 44100 -ac 2 \
+            -c:a libvorbis "$RUNNER_TEMP/media-check/tone.ogg"
+          export WINEPREFIX="$RUNNER_TEMP/media-wine"
+          cd "$RUNNER_TEMP/media-check"
+          RECOMP_TEST_AUDIO=tone.ogg xvfb-run -a wine ./dx_tests.exe
+
+  native-compile:
+    # Game files and generated code are never available in CI. The *-stub
+    # presets link every host against tools/gen_stub_translation.py's link-only
+    # translation, so a broken host still fails the build. Each platform builds
+    # every test binary it has and runs the suites that need no game files;
+    # macOS (Metal) and Linux (lavapipe) also run the GPU suites. Nothing is
+    # uploaded.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            preset: macos-stub
+            labels: "nogame|gpu"
+          - os: ubuntu-24.04
+            preset: linux-stub
+            labels: "nogame|gpu" # lavapipe supplies the Vulkan device
+          - os: windows-2025
+            preset: windows-stub
+            labels: nogame
+          - os: macos-15
+            preset: ios-stub
+            labels: none
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install clang, lld and SDL3's window and audio headers (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          # SDL3's documented Linux build dependencies (README-linux), so the
+          # X11 and Wayland backends configure without a per-extension hunt.
+          # FFmpeg builds from source with build-essential; no FFmpeg packages.
+          sudo apt-get install -y -qq clang lld build-essential pkg-config libasound2-dev \
+            libpulse-dev libaudio-dev libjack-dev libsndio-dev libx11-dev libxext-dev \
+            libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+            libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev \
+            libpipewire-0.3-dev libwayland-dev libdecor-0-dev liburing-dev \
+            mesa-vulkan-drivers glslc
+      - name: Software Vulkan for the GPU suites (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          ls -l /usr/share/vulkan/icd.d/ || true
+          echo "VK_LOADER_DEBUG=error,warn" >> "$GITHUB_ENV"
+          echo "LIBGL_ALWAYS_SOFTWARE=1" >> "$GITHUB_ENV"
+          echo "SDL_VIDEODRIVER=dummy" >> "$GITHUB_ENV"
+      - name: Enter the Visual Studio developer environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Install CMake and Ninja
+        shell: bash
+        run: |
+          python3 -m venv .ci
+          if [ -d .ci/Scripts ]; then BIN=.ci/Scripts; else BIN=.ci/bin; fi
+          "$BIN/python" -m pip install cmake==4.1.2 ninja==1.13.0
+          if [ "$RUNNER_OS" = Windows ]; then
+            cygpath -w "$PWD/$BIN" >> "$GITHUB_PATH"
+          else
+            echo "$PWD/$BIN" >> "$GITHUB_PATH"
+          fi
+      - name: Configure
+        if: runner.os != 'Windows'
+        run: cmake --preset ${{ matrix.preset }}
+      - name: MSYS2's make for the FFmpeg build (Windows)
+        if: runner.os == 'Windows'
+        run: C:\msys64\usr\bin\pacman.exe -S --noconfirm --needed make diffutils
+      - name: Configure with video (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --preset ${{ matrix.preset }} -DRECOMP_FFMPEG_MAKE=C:/msys64/usr/bin/make.exe
+      - name: Build every test binary this platform has
+        if: matrix.preset != 'ios-stub'
+        run: cmake --build --preset ${{ matrix.preset }} --target check_binaries
+      - name: Link every host against the stub translation
+        if: matrix.preset != 'ios-stub'
+        run: cmake --build --preset ${{ matrix.preset }} --target recomp_app pop_headless pop_smoke
+      - name: Compile the iOS app against the stub translation (no signing)
+        if: matrix.preset == 'ios-stub'
+        run: cmake --build --preset ${{ matrix.preset }} --target recomp_app -- CODE_SIGNING_ALLOWED=NO
+      - name: Run the suites that need no game files
+        if: matrix.preset != 'ios-stub'
+        run: ctest --preset ${{ matrix.preset }} -L "${{ matrix.labels }}" --output-on-failure
