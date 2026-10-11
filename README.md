@@ -1,55 +1,105 @@
-# Scarface Recomp — macOS Apple Silicon
+<div align="center">
 
-An **unofficial native Apple Silicon port** of **Scarface: The World Is Yours** (2006), built using static recompilation of the PC version.
+# Scarface Recomp
 
-> **Bring your own game.** This project does **not** include `scarface.exe`, the game's archives, movies, or other retail assets. You need your own PC installation of **Scarface v1.00.2** to play.
+### Native Apple Silicon Port
+
+**Scarface: The World Is Yours (2006)**  
+*Static recompilation of the original Windows PC version for macOS ARM64*
+
+![ARM64](https://img.shields.io/badge/ARCH-ARM64-8A2BE2?style=for-the-badge)
+![macOS](https://img.shields.io/badge/PLATFORM-macOS-111111?style=for-the-badge&logo=apple&logoColor=white)
+![Experimental](https://img.shields.io/badge/STATUS-EXPERIMENTAL-C46A00?style=for-the-badge)
+![Target](https://img.shields.io/badge/TARGET-Scarface%20v1.00.2-2455A4?style=for-the-badge)
+![Language](https://img.shields.io/badge/LANGUAGE-C%20%7C%20C%2B%2B-00599C?style=for-the-badge)
+
+<br>
+
+A fan-made native Apple Silicon port built through static recompilation.
+
+</div>
+
+---
+
+<div align="center">
+
+> **THE WORLD IS YOURS**
+>
+> An unofficial native Apple Silicon port of *Scarface: The World Is Yours*.
+
+</div>
+
+> **Bring your own game files.** This project does not include `scarface.exe`, the game's archives, movies, or other retail assets. You need your own original PC game files from **Scarface v1.00.2**, accessible from your Mac.
 
 ## About this project
 
-This is **my first time doing anything like this**: taking a Windows x86 game and getting it running natively on an Apple Silicon Mac through static recompilation. I've learned a lot while working on it, and I'm sharing the results for other people who love this game and want to experiment with it.
+This is my **first attempt at a full Windows x86-to-ARM64 static recompilation**. While I have worked on game ports before, this project has been an entirely new learning experience for me.
 
-It's a **work in progress**, not a polished commercial release. Gameplay works in the development build, but there may still be bugs, imperfect audio or graphics, and performance drops. Thanks for being patient with a first-time project of this kind!
+This is a passion project focused on learning reverse engineering, static recompilation, compatibility layers, native rendering, audio systems, and the challenges involved in bringing older Windows software to modern Apple hardware.
 
-**This repository includes the generated C code and the modified native runtime.** You do **not** need IDA, Ghidra, or the original recompilation toolchain just to build the Mac app.
+It is an **experimental work in progress**, not a polished commercial release. Gameplay works in development builds, but audio, graphics, compatibility, and performance may still need improvement.
 
-## What you need
+**The generated C code is included in this repository.** You do **not** need IDA, Ghidra, or the original recompilation toolchain just to build the Mac app.
 
-- An **Apple Silicon Mac** (M-series chip; **not** an Intel Mac).
-- Your **own PC copy** of *Scarface: The World Is Yours*, including its game data files.
-- The **matching v1.00.2 `scarface.exe`** described below.
-- An internet connection for the initial build dependencies.
+## Requirements
 
-### Important: check your `scarface.exe` first
+You will need:
 
-The generated game code in this repository comes from **one specific PC executable**. A different patch, edition, or modified EXE may not work, even if it is labeled v1.00.2.
+- An Apple Silicon Mac with an M-series chip
+- Your own legal PC copy of *Scarface: The World Is Yours*
+- The complete original PC game installation and data files, accessible from your Mac
+- A matching `v1.00.2` `scarface.exe`
+- Xcode Command Line Tools
+- Homebrew
+- CMake
+- Ninja
+- Python 3.12
+- `libvorbis`, `libogg`, and OpenAL Soft
+- An internet connection for the initial build dependencies
 
-Open **Terminal** and run this, replacing the example path with your own:
+> Intel Macs are not supported by this project.
+
+You do **not** need to install the Windows game through a Windows installer on macOS. The original PC installation files can be copied from a Windows installation, stored on an external drive, or placed in any folder your Mac can access.
+
+## Verify your `scarface.exe`
+
+The generated game code targets **one specific PC executable**. A different patch, edition, modified executable, or release may not work, even if Windows labels it `v1.00.2`.
+
+Open Terminal and run the following command, replacing the example path with the location of your executable:
 
 ```bash
 shasum -a 256 "/path/to/your/scarface.exe"
 ```
 
-**Required SHA-256:**
+The required SHA-256 is:
 
 ```text
 aee792ee4552e28c533abab7992dd5ad542e8ff12806cbcedab300842d86f6f5
 ```
 
-If your result matches, you have the executable this build targets. **If it doesn't match, that doesn't mean your game is illegitimate**—only that this release has not been verified for that executable. Keep your original game files intact; don't rename or modify an EXE just to make its hash look correct.
+If the hash matches, your executable is the version targeted by this build.
 
-**You need the whole game installation to play, not just the EXE.** The runtime reads the game data alongside `scarface.exe`. Your installation can be anywhere on your Mac.
+If it does not match, that does **not** necessarily mean your copy is illegitimate. It only means this release has not been verified against that executable, and it may not work correctly.
+
+> The EXE alone is not enough. You need the complete original game installation because the runtime reads the game data alongside `scarface.exe`.
 
 ## Build the Mac app
 
-### 1. Get the project
+### 1. Download the project
 
-On GitHub, click **Code → Download ZIP**, extract it, and open **Terminal**.
+On GitHub, select **Code → Download ZIP**, extract the archive, and open Terminal.
 
-Type `cd ` (with a space after it), then drag the extracted project folder from Finder into Terminal and press **Return**. This puts Terminal in the correct folder, whatever the folder is named.
+Move into the extracted project directory:
+
+```bash
+cd /path/to/Scarface-Recomp-macOS-Apple-Silicon
+```
+
+You can also type `cd ` with a space after it, drag the extracted project folder from Finder into Terminal, and press **Return**.
 
 ### 2. Install the build tools
 
-Install [Homebrew](https://brew.sh) if you don't have it already. Then run:
+Install [Homebrew](https://brew.sh) if it is not already installed. Then run:
 
 ```bash
 xcode-select --install
@@ -60,54 +110,78 @@ If the Xcode Command Line Tools are already installed, macOS may simply tell you
 
 ### 3. Compile
 
-From inside the project folder, run:
+From inside the project directory, run:
 
 ```bash
 python3.12 tools/build.py --target app
 ```
 
-The first build can take a while. It downloads and builds dependencies such as SDL, glslang, and FFmpeg. A clean Apple Silicon build of this release has been completed successfully, but build time will vary by Mac.
+The first build may take a while. It downloads and builds additional dependencies, including components such as SDL, glslang, and FFmpeg.
 
-When it's done, the app is here:
+When the build finishes, the application should be here:
 
 ```text
 build/ScarfaceRecomp.app
 ```
 
-**You do not need `scarface.exe` to compile.** You only need your matching game installation when you run the app.
+> You do **not** need `scarface.exe` to compile. You only need your matching game installation when launching the app.
 
-## Play
+## Play the game
 
-In Terminal, while still inside the project folder, run:
+From the project directory, run:
 
 ```bash
 ./build/ScarfaceRecomp.app/Contents/MacOS/ScarfaceRecomp --exe "/path/to/your/scarface.exe"
 ```
 
-Replace `/path/to/your/scarface.exe` with the actual location of your copy. Keep the quotation marks when your path has spaces.
+Replace the example path with the actual location of your executable. Keep the quotation marks if the path contains spaces.
 
-**Tip:** On macOS, you can type the command up through `--exe ` and drag `scarface.exe` from Finder into Terminal to fill in its path.
+You can type the command up to `--exe ` and drag `scarface.exe` from Finder into Terminal to insert its path automatically.
 
-The game does **not** have to live inside this repository. You can keep it on another drive or in any folder accessible to your Mac.
+The original game installation does **not** need to be inside this repository. It can be stored anywhere accessible from your Mac, including another drive, as long as the executable can access its accompanying game data.
 
-## Troubleshooting
+## Project status
 
-**`python3.12: command not found`** — Make sure the Homebrew install command completed. Open a new Terminal window and try again.
+This project is an **experimental work in progress**. The current build is not intended to be considered a finished or fully compatible commercial release.
 
-**Build fails while downloading dependencies** — Check your internet connection, then retry the build command. If the failure repeats, include the full error when reporting it.
+The port is being developed and tested on Apple Silicon Macs, but behavior may still differ from the original Windows release.
 
-**The EXE hash doesn't match** — This build targets the exact SHA-256 above. Other executable versions haven't been verified, even if their version labels look similar.
+## Known limitations
 
-**The app builds but the game doesn't load correctly** — Check that the `--exe` path is correct and that the original game data is in the same installation folder. An EXE alone isn't enough.
+Audio, graphics, loading behavior, compatibility, and performance may still need improvement. Possible issues include:
 
-**Sound glitches, graphical bugs, or FPS drops** — This is still an experimental port. Some issues remain under investigation; reporting a reproducible problem is helpful.
+- Audio glitches, interruptions, or timing differences
+- Graphical bugs or missing effects
+- Performance drops in certain scenes
+- Compatibility problems with unsupported executable versions
+- Differences from the original Windows release
+- Features that have not yet been fully tested
 
-## Notes and credits
+When reporting a problem, include clear reproduction steps, terminal output, your Mac model, your macOS version, and the SHA-256 result of your executable if possible.
 
-- **Platform:** macOS on Apple Silicon. This repository is **not** a Nintendo Switch build.
-- **Approach:** Native static recompilation of the original PC x86 executable, with a modified compatibility/runtime layer and Metal rendering.
-- **Game files:** Not included. You must supply your own PC installation.
-- **Generated code:** `gen/` contains translated code derived from the retail executable; `kit/` contains the native runtime and supporting code.
-- **Licenses and notices:** See `LICENSE`, `NOTICE`, `kit/LICENSE`, and `kit/NOTICE` for the applicable project and third-party terms. Those files do not grant rights to the original game.
+## Project structure
 
-This is an unofficial fan project and is **not affiliated with or endorsed by** the game's publishers or rights holders.
+- `gen/` — generated C code translated from the targeted retail executable
+- `kit/` — native runtime, compatibility code, and supporting systems
+- `tools/` — build and project tooling
+- `LICENSE` — project licensing information
+- `NOTICE` — third-party notices and attribution
+
+## Credits and licenses
+
+See the following files for project and third-party licensing information:
+
+- [`LICENSE`](LICENSE)
+- [`NOTICE`](NOTICE)
+- [`kit/LICENSE`](kit/LICENSE)
+- [`kit/NOTICE`](kit/NOTICE)
+
+These files do not grant rights to the original game, its assets, or its retail data. No retail game files are included in this repository.
+
+This is an unofficial fan project and is **not affiliated with, endorsed by, sponsored by, or connected to** the game's publishers or rights holders.
+
+## Final note
+
+This project started as a personal challenge: to see whether a classic Windows x86 game could be brought to life natively on Apple Silicon.
+
+It is my first full Windows x86-to-ARM64 static recompilation, and there is still a lot to learn and improve. Thanks for checking it out, testing it, reporting issues, and following the project.
